@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Accueil" %} - {{ request.tenant.nom }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="jumbotron">
+                <h1 class="display-4">
+                    {% trans "Bienvenue" %}
+                </h1>
+                <p class="lead">
+                    {% blocktrans with nom=request.tenant.nom %}
+                    Vous êtes connecté à l'établissement : <strong>{{ nom }}</strong>
+                    {% endblocktrans %}
+                </p>
+                <hr class="my-4">
+                <p>
+                    {% trans "Système de gestion des absences scolaires multi-tenant." %}
+                </p>
+                <a class="btn btn-primary btn-lg" href="/{{ request.tenant.code }}/dashboard/" role="button">
+                    {% trans "Accéder au dashboard" %}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>{% trans "Informations établissement" %}</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">{% trans "Nom" %}:</dt>
+                        <dd class="col-sm-9">{{ request.tenant.nom }}</dd>
+                        
+                        <dt class="col-sm-3">{% trans "Code" %}:</dt>
+                        <dd class="col-sm-9">{{ request.tenant.code }}</dd>
+                        
+                        {% if request.tenant.email %}
+                        <dt class="col-sm-3">{% trans "Email" %}:</dt>
+                        <dd class="col-sm-9">{{ request.tenant.email }}</dd>
+                        {% endif %}
+                        
+                        {% if request.tenant.telephone %}
+                        <dt class="col-sm-3">{% trans "Téléphone" %}:</dt>
+                        <dd class="col-sm-9">{{ request.tenant.telephone }}</dd>
+                        {% endif %}
+                        
+                        {% if request.tenant.adresse %}
+                        <dt class="col-sm-3">{% trans "Adresse" %}:</dt>
+                        <dd class="col-sm-9">{{ request.tenant.adresse|linebreaks }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>{% trans "Actions rapides" %}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <a href="/{{ request.tenant.code }}/dashboard/" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            {% trans "Dashboard principal" %}
+                        </a>
+                        <a href="/{{ request.tenant.code }}/users/" class="list-group-item list-group-item-action">
+                            <i class="fas fa-users me-2"></i>
+                            {% trans "Gestion des utilisateurs" %}
+                        </a>
+                        <a href="/admin/" class="list-group-item list-group-item-action">
+                            <i class="fas fa-cog me-2"></i>
+                            {% trans "Administration" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

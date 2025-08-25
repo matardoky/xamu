@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Dashboard" %} - {{ request.tenant.nom }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                {% trans "Dashboard" %} - {{ request.tenant.nom }}
+                <small class="text-muted">({{ request.tenant.code }})</small>
+            </h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">{% trans "Établissement" %}</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ request.tenant.nom }}</h5>
+                    <p class="card-text">
+                        {% trans "Code" %}: {{ request.tenant.code }}<br>
+                        {% if request.tenant.email %}
+                            {% trans "Email" %}: {{ request.tenant.email }}<br>
+                        {% endif %}
+                        {% if request.tenant.telephone %}
+                            {% trans "Téléphone" %}: {{ request.tenant.telephone }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">{% trans "Statistiques" %}</div>
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Système multi-tenant actif" %}</h5>
+                    <p class="card-text">
+                        {% trans "Tenant résolu" %}: ✅<br>
+                        {% trans "Isolation des données" %}: ✅<br>
+                        {% trans "Cache actif" %}: ✅
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-header">{% trans "Actions rapides" %}</div>
+                <div class="card-body">
+                    <a href="/{{ request.tenant.code }}/users/" class="btn btn-light btn-sm mb-2 d-block">
+                        {% trans "Gestion des utilisateurs" %}
+                    </a>
+                    <a href="/admin/" class="btn btn-light btn-sm d-block">
+                        {% trans "Administration" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>{% trans "Système Multi-tenant" %}</h3>
+                </div>
+                <div class="card-body">
+                    <p class="lead">
+                        {% trans "Le système multi-tenant est maintenant opérationnel !" %}
+                    </p>
+                    
+                    <h5>{% trans "Fonctionnalités disponibles" %}:</h5>
+                    <ul>
+                        <li>{% trans "Isolation stricte des données par établissement" %}</li>
+                        <li>{% trans "URLs tenant-aware" %} (/<strong>{{ request.tenant.code }}</strong>/...)</li>
+                        <li>{% trans "Auto-filtering automatique des requêtes" %}</li>
+                        <li>{% trans "Cache Redis pour les performances" %}</li>
+                        <li>{% trans "Système de permissions intégré" %}</li>
+                    </ul>
+                    
+                    <h5>{% trans "Prochaines étapes" %}:</h5>
+                    <ol>
+                        <li>{% trans "Créer des modèles métier (Student, Classe, Absence)" %}</li>
+                        <li>{% trans "Étendre le modèle User avec les rôles" %}</li>
+                        <li>{% trans "Implémenter l'import CSV" %}</li>
+                        <li>{% trans "Ajouter les notifications email" %}</li>
+                    </ol>
+                    
+                    <div class="alert alert-success mt-3">
+                        <strong>{% trans "Tenant actuel" %}:</strong> {{ request.tenant.nom }} ({{ request.tenant.code }})
+                        <br>
+                        <small>{% trans "Toutes les données sont automatiquement filtrées pour cet établissement." %}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

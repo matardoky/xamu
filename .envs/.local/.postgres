@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=xamu
+POSTGRES_USER=hFuNlGTVxFwJOxmAkUkgAaLNLYyCRKmQ
+POSTGRES_PASSWORD=Lde8AROHjMJyAA6tLpYPvjUjagVLPBMvmHqZPSsXbWtMBwdKNt3sh7RBHlOWTPQ7
