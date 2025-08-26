@@ -67,6 +67,20 @@ class User(AbstractUser):
         blank=True,
         help_text=_("Rôle de l'utilisateur dans l'établissement")
     )
+    
+    # Champs métier additionnels
+    identifiant_auto = CharField(
+        _("Identifiant automatique"),
+        max_length=50,
+        blank=True,
+        help_text=_("Identifiant généré automatiquement (ex: ETB01-PROF-2024-001)")
+    )
+    
+    premiere_connexion = models.BooleanField(
+        _("Première connexion"),
+        default=True,
+        help_text=_("Indique si l'utilisateur doit changer son mot de passe à la première connexion")
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -126,6 +140,42 @@ class User(AbstractUser):
             return False
         
         return perm in ROLE_PERMISSIONS.get(self.role, [])
+    
+    def generate_identifiant_auto(self):
+        """
+        Génère automatiquement un identifiant unique pour l'utilisateur.
+        Format: {code_etablissement}-{role_court}-{annee}-{numero}
+        """
+        if not self.etablissement or not self.role:
+            return ""
+            
+        from datetime import datetime
+        
+        role_mapping = {
+            'chef_etablissement': 'DIR',
+            'professeur': 'PROF',
+            'cpe': 'CPE',
+            'parent': 'PAR'
+        }
+        
+        role_court = role_mapping.get(self.role, 'USER')
+        annee = datetime.now().year
+        
+        # Compter les utilisateurs existants avec ce rôle dans cet établissement
+        existing_count = User.objects.filter(
+            etablissement=self.etablissement,
+            role=self.role
+        ).exclude(pk=self.pk).count()
+        
+        numero = str(existing_count + 1).zfill(3)
+        
+        return f"{self.etablissement.code.upper()}-{role_court}-{annee}-{numero}"
+    
+    def save(self, *args, **kwargs):
+        # Générer l'identifiant auto si pas encore défini
+        if not self.identifiant_auto and self.etablissement and self.role:
+            self.identifiant_auto = self.generate_identifiant_auto()
+        super().save(*args, **kwargs)
     
     class Meta:
         verbose_name = _("Utilisateur")

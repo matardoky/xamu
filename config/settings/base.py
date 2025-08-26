@@ -89,6 +89,9 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "xamu.users",
     "xamu.schools",  # Multi-tenant system
+    "xamu.academic",  # Academic management (classes, students, subjects)
+    "xamu.attendance",  # Attendance tracking
+    "xamu.notifications",  # Notification system
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
