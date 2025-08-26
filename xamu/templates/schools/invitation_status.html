@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Statut de l'invitation" %} - {{ etablissement.nom }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>📊 {% trans "Statut de l'invitation" %}</h4>
+                    <p class="mb-0">{% trans "Administration - Super-admin uniquement" %}</p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>📍 {% trans "Établissement" %}</h5>
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ etablissement.nom }}</h6>
+                                    <p class="card-text">
+                                        <strong>{% trans "Code" %} :</strong> {{ etablissement.code }}<br>
+                                        <strong>{% trans "Statut" %} :</strong> 
+                                        {% if etablissement.is_active %}
+                                            <span class="badge badge-success">✅ {% trans "Actif" %}</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">❌ {% trans "Inactif" %}</span>
+                                        {% endif %}
+                                        <br>
+                                        {% if etablissement.email %}
+                                        <strong>{% trans "Email" %} :</strong> {{ etablissement.email }}<br>
+                                        {% endif %}
+                                        {% if etablissement.telephone %}
+                                        <strong>{% trans "Téléphone" %} :</strong> {{ etablissement.telephone }}<br>
+                                        {% endif %}
+                                        <strong>{% trans "Créé le" %} :</strong> {{ etablissement.created_at|date:"d/m/Y H:i" }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>📧 {% trans "Invitation" %}</h5>
+                            {% if invitation %}
+                                <div class="card mb-3
+                                    {% if invitation.used %}bg-success
+                                    {% elif invitation.is_expired %}bg-danger
+                                    {% else %}bg-warning{% endif %} text-white">
+                                    <div class="card-body">
+                                        {% if invitation.used %}
+                                            <h6 class="card-title">✅ {% trans "Invitation utilisée" %}</h6>
+                                            <p class="card-text">
+                                                <strong>{% trans "Email" %} :</strong> {{ invitation.email }}<br>
+                                                <strong>{% trans "Utilisée le" %} :</strong> {{ invitation.used_at|date:"d/m/Y H:i" }}<br>
+                                                {% if invitation.user_created %}
+                                                <strong>{% trans "Utilisateur créé" %} :</strong> {{ invitation.user_created.name|default:invitation.user_created.email }}
+                                                {% endif %}
+                                            </p>
+                                        {% elif invitation.is_expired %}
+                                            <h6 class="card-title">❌ {% trans "Invitation expirée" %}</h6>
+                                            <p class="card-text">
+                                                <strong>{% trans "Email" %} :</strong> {{ invitation.email }}<br>
+                                                <strong>{% trans "Expirée le" %} :</strong> {{ invitation.expires_at|date:"d/m/Y H:i" }}<br>
+                                                <strong>{% trans "Créée le" %} :</strong> {{ invitation.created_at|date:"d/m/Y H:i" }}
+                                            </p>
+                                        {% else %}
+                                            <h6 class="card-title">📧 {% trans "Invitation en attente" %}</h6>
+                                            <p class="card-text">
+                                                <strong>{% trans "Email" %} :</strong> {{ invitation.email }}<br>
+                                                <strong>{% trans "Expire le" %} :</strong> {{ invitation.expires_at|date:"d/m/Y H:i" }}<br>
+                                                <strong>{% trans "Créée le" %} :</strong> {{ invitation.created_at|date:"d/m/Y H:i" }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                {% if not invitation.used and not invitation.is_expired %}
+                                    <div class="alert alert-info">
+                                        <h6>🔗 {% trans "Lien d'invitation" %}</h6>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" 
+                                                   value="{% url 'schools:accept_invitation' etablissement_code=etablissement.code token=invitation.token %}"
+                                                   id="invitation-url" readonly>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" 
+                                                        onclick="copyToClipboard()">
+                                                    📋 {% trans "Copier" %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <h6>⚠️ {% trans "Aucune invitation" %}</h6>
+                                    <p class="mb-0">{% trans "Aucune invitation n'a été créée pour cet établissement." %}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <a href="{% url 'admin:schools_etablissement_changelist' %}" class="btn btn-primary">
+                            ⬅️ {% trans "Retour à la liste des établissements" %}
+                        </a>
+                        <a href="{% url 'admin:schools_etablissement_change' etablissement.id %}" class="btn btn-secondary ml-2">
+                            ✏️ {% trans "Modifier l'établissement" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard() {
+    const copyText = document.getElementById("invitation-url");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = "✅ {% trans 'Copié!' %}";
+    button.classList.remove('btn-outline-secondary');
+    button.classList.add('btn-success');
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+</script>
+{% endblock %}

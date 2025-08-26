@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation - Gestion de l'établissement {{ etablissement.nom }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .email-container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 28px;
+        }
+        
+        .header p {
+            color: #6c757d;
+            margin: 10px 0 0 0;
+            font-size: 16px;
+        }
+        
+        .content {
+            margin-bottom: 30px;
+        }
+        
+        .establishment-info {
+            background-color: #e9ecef;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .establishment-info h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        
+        .cta-button {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #28a745;
+            color: white !important;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: #218838;
+        }
+        
+        .important-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .important-note h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+        }
+        
+        .footer {
+            text-align: center;
+            border-top: 1px solid #dee2e6;
+            padding-top: 20px;
+            margin-top: 30px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .expiry {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🎓 XAMU</h1>
+            <p>Système de gestion des absences scolaires</p>
+        </div>
+        
+        <div class="content">
+            <h2>Invitation à gérer un établissement</h2>
+            
+            <p>Bonjour,</p>
+            
+            <p>Vous avez été invité(e) à devenir <strong>chef d'établissement</strong> pour gérer le système de gestion des absences.</p>
+            
+            <div class="establishment-info">
+                <h3>📍 Établissement</h3>
+                <p><strong>{{ etablissement.nom }}</strong></p>
+                <p>Code : {{ etablissement.code }}</p>
+                {% if etablissement.adresse %}
+                <p>Adresse : {{ etablissement.adresse|linebreaks }}</p>
+                {% endif %}
+                {% if etablissement.telephone %}
+                <p>Téléphone : {{ etablissement.telephone }}</p>
+                {% endif %}
+            </div>
+            
+            <p>En tant que chef d'établissement, vous pourrez :</p>
+            <ul>
+                <li>✅ Gérer les utilisateurs de votre établissement</li>
+                <li>✅ Consulter et gérer les absences</li>
+                <li>✅ Accéder aux statistiques</li>
+                <li>✅ Configurer les paramètres de l'établissement</li>
+            </ul>
+            
+            <div class="cta-button">
+                <a href="{{ invitation_url }}" class="btn">
+                    🚀 Accepter l'invitation
+                </a>
+            </div>
+            
+            <div class="important-note">
+                <h4>⚠️ Important</h4>
+                <p>Cette invitation expire le <span class="expiry">{{ expires_at|date:"l d F Y à H:i" }}</span>.</p>
+                <p>Si vous n'avez pas de compte, un nouveau compte sera créé automatiquement lors de l'acceptation.</p>
+                <p>Si vous avez déjà un compte, connectez-vous d'abord puis cliquez sur le lien d'invitation.</p>
+            </div>
+            
+            <p>Si vous pensez avoir reçu cet email par erreur, vous pouvez l'ignorer en toute sécurité.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Cet email a été envoyé par <strong>XAMU</strong></p>
+            <p>Si vous avez des questions, contactez votre administrateur système.</p>
+            <p><small>Lien d'invitation : <a href="{{ invitation_url }}">{{ invitation_url }}</a></small></p>
+        </div>
+    </div>
+</body>
+</html>

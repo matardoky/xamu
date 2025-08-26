@@ -1,0 +1,41 @@
+XAMU - Système de gestion des absences scolaires
+===============================================
+
+INVITATION À GÉRER UN ÉTABLISSEMENT
+
+Bonjour,
+
+Vous avez été invité(e) à devenir chef d'établissement pour gérer 
+le système de gestion des absences.
+
+ÉTABLISSEMENT
+{{ etablissement.nom }}
+Code : {{ etablissement.code }}{% if etablissement.adresse %}
+Adresse : {{ etablissement.adresse }}{% endif %}{% if etablissement.telephone %}
+Téléphone : {{ etablissement.telephone }}{% endif %}
+
+En tant que chef d'établissement, vous pourrez :
+- Gérer les utilisateurs de votre établissement
+- Consulter et gérer les absences  
+- Accéder aux statistiques
+- Configurer les paramètres de l'établissement
+
+ACCEPTER L'INVITATION
+Pour accepter cette invitation, cliquez sur le lien suivant :
+{{ invitation_url }}
+
+⚠️ IMPORTANT
+Cette invitation expire le {{ expires_at|date:"l d F Y à H:i" }}.
+
+Si vous n'avez pas de compte, un nouveau compte sera créé 
+automatiquement lors de l'acceptation.
+
+Si vous avez déjà un compte, connectez-vous d'abord puis 
+cliquez sur le lien d'invitation.
+
+Si vous pensez avoir reçu cet email par erreur, vous pouvez 
+l'ignorer en toute sécurité.
+
+---
+Cet email a été envoyé par XAMU
+Si vous avez des questions, contactez votre administrateur système.

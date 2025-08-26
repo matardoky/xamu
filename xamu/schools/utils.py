@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.core.exceptions import PermissionDenied
 from django.utils.translation import gettext as _
 from django.conf import settings
+import re
 
 from .middleware import get_current_tenant
 

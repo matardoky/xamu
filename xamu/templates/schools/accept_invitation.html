@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Accepter l'invitation" %} - {{ etablissement.nom }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center bg-primary text-white">
+                    <h3>🎓 {% trans "XAMU" %}</h3>
+                    <p class="mb-0">{% trans "Système de gestion des absences scolaires" %}</p>
+                </div>
+                <div class="card-body">
+                    <h4 class="card-title text-center mb-4">
+                        {% trans "Invitation à gérer un établissement" %}
+                    </h4>
+                    
+                    <div class="alert alert-info">
+                        <h5>📍 {% trans "Établissement" %}</h5>
+                        <p class="mb-1"><strong>{{ etablissement.nom }}</strong></p>
+                        <p class="mb-1">{% trans "Code" %} : {{ etablissement.code }}</p>
+                        {% if etablissement.adresse %}
+                        <p class="mb-1">{% trans "Adresse" %} : {{ etablissement.adresse|linebreaks }}</p>
+                        {% endif %}
+                        {% if etablissement.telephone %}
+                        <p class="mb-0">{% trans "Téléphone" %} : {{ etablissement.telephone }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <h6>{% trans "En tant que chef d'établissement, vous pourrez" %} :</h6>
+                        <ul class="mb-0">
+                            <li>✅ {% trans "Gérer les utilisateurs de votre établissement" %}</li>
+                            <li>✅ {% trans "Consulter et gérer les absences" %}</li>
+                            <li>✅ {% trans "Accéder aux statistiques" %}</li>
+                            <li>✅ {% trans "Configurer les paramètres de l'établissement" %}</li>
+                        </ul>
+                    </div>
+                    
+                    {% if user.is_authenticated %}
+                        <!-- L'utilisateur est connecté -->
+                        <div class="alert alert-warning">
+                            <h6>{% trans "Vous êtes connecté en tant que" %} : {{ user.name|default:user.email }}</h6>
+                            <p class="mb-0">{% trans "En acceptant cette invitation, vous deviendrez chef de l'établissement" %} <strong>{{ etablissement.nom }}</strong>.</p>
+                        </div>
+                        
+                        <form method="post" class="text-center">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-lg">
+                                🚀 {% trans "Accepter l'invitation" %}
+                            </button>
+                        </form>
+                    {% else %}
+                        <!-- L'utilisateur n'est pas connecté -->
+                        <div class="alert alert-info">
+                            <h6>{% trans "Créer votre compte" %}</h6>
+                            <p class="mb-0">{% trans "Pour accepter cette invitation, vous devez créer un compte ou vous connecter." %}</p>
+                        </div>
+                        
+                        <div class="text-center">
+                            <a href="{% url 'account_signup' %}?email={{ invitation.email }}" class="btn btn-success btn-lg">
+                                🚀 {% trans "Créer mon compte et accepter" %}
+                            </a>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <p class="text-muted">
+                                {% trans "Vous avez déjà un compte ?" %}
+                                <a href="{% url 'account_login' %}">
+                                    {% trans "Se connecter" %}
+                                </a>
+                            </p>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-warning mt-4">
+                        <h6>⚠️ {% trans "Important" %}</h6>
+                        <p class="mb-0">
+                            {% blocktrans with expires_at=invitation.expires_at %}
+                            Cette invitation expire le <strong>{{ expires_at }}</strong>.
+                            {% endblocktrans %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

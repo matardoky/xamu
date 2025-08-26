@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Établissement non trouvé" %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center bg-warning text-dark">
+                    <h3>⚠️ {% trans "Établissement non trouvé" %}</h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="alert alert-warning">
+                        <h5>{% trans "Oops ! Nous n'avons pas trouvé cet établissement" %}</h5>
+                        <p>{% trans "L'établissement que vous cherchez n'existe pas ou est inactif." %}</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>{% trans "Vérifications à faire" %} :</h6>
+                        <ul class="text-left">
+                            <li>{% trans "Vérifiez l'URL dans votre navigateur" %}</li>
+                            <li>{% trans "Assurez-vous que le code établissement est correct" %}</li>
+                            <li>{% trans "Contactez votre administrateur si le problème persiste" %}</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <h6>💡 {% trans "Format attendu" %}</h6>
+                        <p class="mb-0">
+                            {% trans "L'URL doit avoir le format" %} : 
+                            <code>https://monsite.com/<strong>code_etablissement</strong>/</code>
+                        </p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="/" class="btn btn-primary">
+                            🏠 {% trans "Retour à l'accueil" %}
+                        </a>
+                        <a href="/admin/" class="btn btn-secondary ml-2">
+                            🛠️ {% trans "Administration" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

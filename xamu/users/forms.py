@@ -1,7 +1,7 @@
 from allauth.account.forms import SignupForm
 from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django.contrib.auth import forms as admin_forms
-from django.forms import EmailField
+from django.forms import EmailField, CharField
 from django.utils.translation import gettext_lazy as _
 
 from .models import User
@@ -10,7 +10,6 @@ from .models import User
 class UserAdminChangeForm(admin_forms.UserChangeForm):
     class Meta(admin_forms.UserChangeForm.Meta):  # type: ignore[name-defined]
         model = User
-        field_classes = {"email": EmailField}
 
 
 class UserAdminCreationForm(admin_forms.AdminUserCreationForm):
@@ -34,6 +33,7 @@ class UserSignupForm(SignupForm):
     Default fields will be added automatically.
     Check UserSocialSignupForm for accounts created from social.
     """
+    name = CharField(max_length=255, label=_("Full Name"))
 
 
 class UserSocialSignupForm(SocialSignupForm):
@@ -42,3 +42,4 @@ class UserSocialSignupForm(SocialSignupForm):
     Default fields will be added automatically.
     See UserSignupForm otherwise.
     """
+    name = CharField(max_length=255, label=_("Full Name"))

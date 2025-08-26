@@ -16,9 +16,6 @@ class UserDetailView(LoginRequiredMixin, DetailView):
     slug_url_kwarg = "id"
 
 
-user_detail_view = UserDetailView.as_view()
-
-
 class UserUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = User
     fields = ["name"]
@@ -29,18 +26,23 @@ class UserUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return self.request.user.get_absolute_url()
 
     def get_object(self, queryset: QuerySet | None=None) -> User:
-        assert self.request.user.is_authenticated  # type guard
         return self.request.user
-
-
-user_update_view = UserUpdateView.as_view()
 
 
 class UserRedirectView(LoginRequiredMixin, RedirectView):
     permanent = False
 
-    def get_redirect_url(self) -> str:
-        return reverse("users:detail", kwargs={"pk": self.request.user.pk})
-
-
-user_redirect_view = UserRedirectView.as_view()
+    def get_redirect_url(self, *args, **kwargs) -> str:
+        if self.request.user.is_authenticated:
+            if hasattr(self.request, 'tenant') and self.request.tenant:
+                return reverse(
+                    "tenant:dashboard",
+                    kwargs={"tenant_code": self.request.tenant.code},
+                )
+            if hasattr(self.request.user, 'etablissement') and self.request.user.etablissement:
+                return reverse(
+                    "tenant:dashboard",
+                    kwargs={"tenant_code": self.request.user.etablissement.code},
+                )
+            return reverse("home")
+        return reverse("account_login")

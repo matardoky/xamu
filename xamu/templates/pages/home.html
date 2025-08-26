@@ -1,3 +1,100 @@
 {% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Accueil" %} - xamu{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">{% trans "Bienvenue sur xamu" %}</h1>
+    <p class="lead">
+        {% trans "Système de gestion des absences scolaires multi-établissements" %}
+    </p>
+    <hr class="my-4">
+    <p>
+        {% trans "Sélectionnez votre établissement pour accéder à l'application." %}
+    </p>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>{% trans "Établissements disponibles" %}</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    {% trans "Pour accéder à votre établissement, utilisez l'URL suivante :" %}
+                    <code>{{ request.get_host }}/[code_etablissement]/</code>
+                </p>
+                
+                <div class="alert alert-info">
+                    <strong>{% trans "Exemple" %}:</strong><br>
+                    {% trans "Pour l'établissement avec le code" %} <code>etb001</code> :
+                    <br><span class="btn btn-link p-0">{{ request.get_host }}/etb001/</span>
+                </div>
+                
+                <div class="mt-4">
+                    <h5>{% trans "Fonctionnalités" %}</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="fas fa-shield-alt text-success me-2"></i>
+                            {% trans "Isolation stricte des données par établissement" %}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            {% trans "Gestion multi-rôles (chef, professeur, CPE, parent)" %}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-envelope text-info me-2"></i>
+                            {% trans "Notifications email automatiques" %}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-file-csv text-warning me-2"></i>
+                            {% trans "Import CSV pour création de comptes en masse" %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h4>{% trans "Administration" %}</h4>
+            </div>
+            <div class="card-body">
+                {% if request.user.is_authenticated and request.user.is_superuser %}
+                    <p>{% trans "Vous êtes connecté en tant qu'administrateur." %}</p>
+                    <a href="{% url 'admin:index' %}" class="btn btn-primary btn-block">
+                        {% trans "Interface d'administration" %}
+                    </a>
+                {% else %}
+                    <p class="text-muted">
+                        {% trans "Interface réservée aux administrateurs système." %}
+                    </p>
+                    <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary btn-block">
+                        {% trans "Connexion admin" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h4>{% trans "Aide" %}</h4>
+            </div>
+            <div class="card-body">
+                <p class="small">
+                    {% trans "Contactez votre administrateur système pour obtenir le code de votre établissement." %}
+                </p>
+                <a href="{% url 'about' %}" class="btn btn-outline-info btn-sm">
+                    {% trans "En savoir plus" %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
 

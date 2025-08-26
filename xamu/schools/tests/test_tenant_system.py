@@ -38,11 +38,13 @@ class TenantMiddlewareTest(TestCase):
         self.etb1 = Etablissement.objects.create(
             code='etb001',
             nom='École Test 1',
+            email='contact1@test.fr',
             site=self.site1
         )
         self.etb2 = Etablissement.objects.create(
             code='etb002',
             nom='École Test 2',
+            email='contact2@test.fr',
             site=self.site2
         )
     
@@ -81,6 +83,10 @@ class TenantMiddlewareTest(TestCase):
             '/static/css/main.css',
             '/',
             '/about/',
+            '/accounts/login/',
+            '/accounts/signup/',
+            '/schools/invitation/etb001/token123/',
+            '/users/~redirect/',
         ]
         
         for path in exempt_paths:
@@ -99,12 +105,20 @@ class TenantMiddlewareTest(TestCase):
         self.assertEqual(result.status_code, 302)  # Redirection
         self.assertEqual(result.url, '/')
     
-    def test_auth_urls_without_tenant_404(self):
-        """Test 404 pour URLs d'auth sans tenant"""
-        request = self.factory.get('/accounts/login/')
+    def test_auth_urls_without_tenant_do_not_raise_404(self):
+        """Test que les URLs d'auth sans tenant ne lèvent pas de 404"""
+        auth_paths = [
+            '/accounts/login/',
+            '/accounts/signup/',
+            '/accounts/password/reset/',
+        ]
         
-        with self.assertRaises(Http404):
-            self.middleware.process_request(request)
+        for path in auth_paths:
+            request = self.factory.get(path)
+            result = self.middleware.process_request(request)
+            
+            self.assertIsNone(result) # Ne doit pas rediriger ou lever de 404
+            self.assertIsNone(getattr(request, 'tenant', None)) # Pas de tenant attaché
     
     def test_tenant_caching(self):
         """Test mise en cache des tenants"""
@@ -218,6 +232,8 @@ class TenantUtilsTest(TestCase):
         request = self.factory.get('/etb001/dashboard/')
         request.tenant = self.etb1
         
+        response = self.middleware.process_request(request)
+        self.assertIsNone(response)
         result = test_view(request)
         self.assertEqual(result, "Success")
         

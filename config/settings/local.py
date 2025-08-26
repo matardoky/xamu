@@ -32,6 +32,11 @@ CACHES = {
 EMAIL_HOST = env("EMAIL_HOST", default="mailpit")
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-port
 EMAIL_PORT = 1025
+# Email par défaut pour l'envoi
+DEFAULT_FROM_EMAIL = "noreply@xamu.local"
+
+# ALLAUTH - Désactiver l'inscription standard en développement
+ACCOUNT_ALLOW_REGISTRATION = False
 
 # django-debug-toolbar
 # ------------------------------------------------------------------------------

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Invitation invalide" %} - {{ etablissement.nom }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center bg-danger text-white">
+                    <h3>❌ {% trans "Invitation invalide" %}</h3>
+                </div>
+                <div class="card-body text-center">
+                    <div class="alert alert-danger">
+                        {% if invitation.used %}
+                            <h5>{% trans "Invitation déjà utilisée" %}</h5>
+                            <p>{% trans "Cette invitation a déjà été utilisée" %} 
+                               {% if invitation.used_at %}
+                               {% blocktrans with date=invitation.used_at %}le {{ date }}{% endblocktrans %}
+                               {% endif %}
+                               {% if invitation.user_created %}
+                               {% blocktrans with email=invitation.user_created.email %}par {{ email }}{% endblocktrans %}
+                               {% endif %}.
+                            </p>
+                        {% elif invitation.is_expired %}
+                            <h5>{% trans "Invitation expirée" %}</h5>
+                            <p>
+                                {% blocktrans with expires_at=invitation.expires_at %}
+                                Cette invitation a expiré le {{ expires_at }}.
+                                {% endblocktrans %}
+                            </p>
+                        {% else %}
+                            <h5>{% trans "Invitation invalide" %}</h5>
+                            <p>{% trans "Cette invitation n'est plus valide." %}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6>📍 {% trans "Établissement" %}</h6>
+                        <p class="mb-0"><strong>{{ etablissement.nom }}</strong> ({{ etablissement.code }})</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>{% trans "Que faire ?" %}</h6>
+                        <ul class="text-left">
+                            <li>{% trans "Contactez l'administrateur de votre établissement" %}</li>
+                            <li>{% trans "Demandez une nouvelle invitation" %}</li>
+                            <li>{% trans "Vérifiez que vous utilisez le bon lien d'invitation" %}</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="/" class="btn btn-primary">
+                            🏠 {% trans "Retour à l'accueil" %}
+                        </a>
+                        {% if etablissement %}
+                        <a href="{% url 'tenant:home' tenant_code=etablissement.code %}" class="btn btn-secondary ml-2">
+                            {% trans "Accès établissement" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

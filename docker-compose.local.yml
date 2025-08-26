@@ -39,7 +39,7 @@ services:
     image: docker.io/axllent/mailpit:latest
     container_name: xamu_local_mailpit
     ports:
-      - "8025:8025"
+      - "8025:8025"  # Interface web
 
   redis:
     image: docker.io/redis:6

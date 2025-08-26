@@ -11,7 +11,7 @@ from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
-    # Pages globales sans tenant
+    # Pages globales sans tenant (marketing, landing page)
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
     path(
         "about/",
@@ -21,12 +21,15 @@ urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     
-    # URLs multi-tenant - IMPORTANT: À placer après les URLs globales
+    # URLs globales pour les invitations (accessibles sans tenant)
+    path("schools/", include("xamu.schools.urls")),
+    # URLs multi-tenant - IMPORTANT: Toute l'authentification est dans le contexte tenant
     path("<str:tenant_code>/", include("xamu.schools.tenant_urls", namespace="tenant")),
     
-    # User management (global, pour la gestion sans tenant)
-    path("users/", include("xamu.users.urls", namespace="users")),
-    path("accounts/", include("allauth.urls")),
+    # Allauth urls
+    path('accounts/', include('allauth.urls')),
+    # Gestion des utilisateurs dans le contexte tenant
+    path('users/', include('xamu.users.urls')),
     
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),

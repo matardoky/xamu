@@ -51,10 +51,10 @@
             <div class="card text-white bg-info mb-3">
                 <div class="card-header">{% trans "Actions rapides" %}</div>
                 <div class="card-body">
-                    <a href="/{{ request.tenant.code }}/users/" class="btn btn-light btn-sm mb-2 d-block">
+                    <a href="{% url 'users:redirect' %}" class="btn btn-light btn-sm mb-2 d-block">
                         {% trans "Gestion des utilisateurs" %}
                     </a>
-                    <a href="/admin/" class="btn btn-light btn-sm d-block">
+                    <a href="{% url 'admin:index' %}" class="btn btn-light btn-sm d-block">
                         {% trans "Administration" %}
                     </a>
                 </div>

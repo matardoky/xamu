@@ -144,8 +144,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "xamu.schools.middleware.TenantMiddleware",  # Multi-tenant resolution
     "django.contrib.messages.middleware.MessageMiddleware",
+    "xamu.schools.middleware.TenantMiddleware",  # Multi-tenant resolution
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 ]
@@ -194,6 +194,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "xamu.users.context_processors.allauth_settings",
+                "xamu.schools.context_processors.tenant_context",  # Multi-tenant context
             ],
         },
     },
@@ -319,6 +320,8 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+# Désactiver les comptes sociaux pour éviter les problèmes d'URLs
+SOCIALACCOUNT_ONLY = False
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_ADAPTER = "xamu.users.adapters.AccountAdapter"
 # https://docs.allauth.org/en/latest/account/forms.html

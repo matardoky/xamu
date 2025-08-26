@@ -60,34 +60,47 @@
                 aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <a class="navbar-brand" href="{% url 'home' %}">xamu</a>
+        {% if is_tenant_context %}
+          <a class="navbar-brand" href="{% url 'tenant:home' tenant_code=request.tenant.code %}">xamu - {{ tenant.nom }}</a>
+        {% else %}
+          <a class="navbar-brand" href="{% url 'home' %}">xamu</a>
+        {% endif %}
+        
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="{% url 'home' %}">Home <span class="visually-hidden">(current)</span></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">About</a>
-            </li>
-            {% if request.user.is_authenticated %}
+            {% if is_tenant_context %}
+              {# Navigation dans le contexte d'un tenant #}
               <li class="nav-item">
-                <a class="nav-link"
-                   href="{% url 'users:detail' request.user.pk %}">{% translate "My Profile" %}</a>
+                <a class="nav-link" href="{% url 'tenant:home' tenant_code=request.tenant.code %}">{% translate "Home" %}</a>
               </li>
               <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
+                <a class="nav-link" href="{% url 'tenant:dashboard' tenant_code=request.tenant.code %}">{% translate "Dashboard" %}</a>
               </li>
             {% else %}
-              {% if ACCOUNT_ALLOW_REGISTRATION %}
+              {# Navigation globale (landing pages) #}
+              <li class="nav-item active">
+                <a class="nav-link" href="{% url 'home' %}">Home <span class="visually-hidden">(current)</span></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'about' %}">About</a>
+              </li>
+            {% endif %}
+            
+            {% if request.user.is_authenticated %}
+              {% if is_tenant_context %}
                 <li class="nav-item">
-                  {# URL provided by django-allauth/account/urls.py #}
-                  <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
+                  <a class="nav-link" href="{% url 'tenant:users:detail' tenant_code=request.tenant.code pk=request.user.pk %}">{% translate "My Profile" %}</a>
                 </li>
               {% endif %}
               <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
+                <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
+              </li>
+            {% else %}
+              <li class="nav-item">
                 <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
+              </li>
+              <li class="nav-item">
+                <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
               </li>
             {% endif %}
           </ul>

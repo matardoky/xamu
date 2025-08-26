@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from .managers import TenantManager
@@ -71,21 +71,11 @@ class TenantMixin(models.Model):
         super().delete(*args, **kwargs)
 
 
-class TenantUserMixin(models.Model):
+class TenantUserMixin(TenantMixin):
     """
     Mixin spécialisé pour les modèles liés aux utilisateurs dans un contexte tenant.
     Étend TenantMixin avec des fonctionnalités user-specific.
     """
-    
-    etablissement = models.ForeignKey(
-        'schools.Etablissement',
-        on_delete=models.CASCADE,
-        verbose_name=_("Établissement"),
-        help_text=_("Établissement auquel appartient cet utilisateur")
-    )
-    
-    objects = TenantManager()
-    _tenant_field = 'etablissement'
     
     class Meta:
         abstract = True
@@ -102,7 +92,6 @@ class TenantUserMixin(models.Model):
             hasattr(self.user, 'etablissement') and 
             self.user.etablissement != self.etablissement):
             
-            from django.core.exceptions import ValidationError
             raise ValidationError({
                 'user': _("L'utilisateur doit appartenir au même établissement.")
             })

@@ -15,17 +15,15 @@ class TenantQuerySet(QuerySet):
         super().__init__(*args, **kwargs)
     
     def _clone(self):
-        """Override clone pour préserver l'état du tenant filtering"""
+        """
+        Override clone pour préserver l'état du tenant filtering
+        """
         clone = super()._clone()
         clone.tenant_filtering_disabled = self.tenant_filtering_disabled
         return clone
     
-    def _filter_or_exclude(self, negate, *args, **kwargs):
-        """Override pour appliquer le filtrage tenant automatiquement"""
-        clone = self._clone()
-        
-        # Appliquer le filtrage tenant si activé
-        if not clone.tenant_filtering_disabled and hasattr(self.model, '_tenant_field'):
+    def _apply_tenant_filter(self, clone, negate):
+        if hasattr(self.model, '_tenant_field'):
             tenant = get_current_tenant()
             if tenant:
                 tenant_filter = {self.model._tenant_field: tenant}
@@ -33,6 +31,17 @@ class TenantQuerySet(QuerySet):
                     clone = clone.exclude(**tenant_filter)
                 else:
                     clone = clone.filter(**tenant_filter)
+        return clone
+
+    def _filter_or_exclude(self, negate, *args, **kwargs):
+        """
+        Override pour appliquer le filtrage tenant automatiquement
+        """
+        clone = self._clone()
+        
+        # Appliquer le filtrage tenant si activé
+        if not clone.tenant_filtering_disabled:
+            clone = self._apply_tenant_filter(clone, negate)
         
         # Appliquer les autres filtres normalement
         return super(TenantQuerySet, clone)._filter_or_exclude(negate, *args, **kwargs)
@@ -76,13 +85,10 @@ class TenantManager(models.Manager):
         queryset = TenantQuerySet(self.model, using=self._db)
         
         # Appliquer le filtrage tenant par défaut
-        if (hasattr(self.model, '_tenant_field') and 
-            not getattr(queryset, 'tenant_filtering_disabled', False)):
-            
+        if hasattr(self.model, '_tenant_field') and not queryset.tenant_filtering_disabled:
             tenant = get_current_tenant()
             if tenant:
-                tenant_filter = {self.model._tenant_field: tenant}
-                queryset = queryset.filter(**tenant_filter)
+                queryset = queryset.filter(**{self.model._tenant_field: tenant})
         
         return queryset
     
@@ -105,10 +111,7 @@ class TenantManager(models.Manager):
         """
         return self.get_queryset().for_tenant(tenant)
     
-    def create(self, **kwargs):
-        """
-        Override create pour injecter automatiquement le tenant.
-        """
+    def _inject_tenant_to_kwargs(self, kwargs):
         if hasattr(self.model, '_tenant_field'):
             tenant = get_current_tenant()
             if tenant and self.model._tenant_field not in kwargs:
@@ -118,37 +121,25 @@ class TenantManager(models.Manager):
                     f"Impossible de créer {self.model.__name__} sans tenant actuel. "
                     f"Utilisez set_current_tenant() ou passez '{self.model._tenant_field}' explicitement."
                 )
-        
+        return kwargs
+
+    def create(self, **kwargs):
+        """
+        Override create pour injecter automatiquement le tenant.
+        """
+        kwargs = self._inject_tenant_to_kwargs(kwargs)
         return super().create(**kwargs)
     
     def get_or_create(self, defaults=None, **kwargs):
         """
         Override get_or_create pour injecter automatiquement le tenant.
         """
-        if hasattr(self.model, '_tenant_field'):
-            tenant = get_current_tenant()
-            if tenant and self.model._tenant_field not in kwargs:
-                kwargs[self.model._tenant_field] = tenant
-            elif not tenant and self.model._tenant_field not in kwargs:
-                raise ImproperlyConfigured(
-                    f"Impossible de get_or_create {self.model.__name__} sans tenant actuel. "
-                    f"Utilisez set_current_tenant() ou passez '{self.model._tenant_field}' explicitement."
-                )
-        
+        kwargs = self._inject_tenant_to_kwargs(kwargs)
         return super().get_or_create(defaults, **kwargs)
     
     def update_or_create(self, defaults=None, **kwargs):
         """
         Override update_or_create pour injecter automatiquement le tenant.
         """
-        if hasattr(self.model, '_tenant_field'):
-            tenant = get_current_tenant()
-            if tenant and self.model._tenant_field not in kwargs:
-                kwargs[self.model._tenant_field] = tenant
-            elif not tenant and self.model._tenant_field not in kwargs:
-                raise ImproperlyConfigured(
-                    f"Impossible de update_or_create {self.model.__name__} sans tenant actuel. "
-                    f"Utilisez set_current_tenant() ou passez '{self.model._tenant_field}' explicitement."
-                )
-        
+        kwargs = self._inject_tenant_to_kwargs(kwargs)
         return super().update_or_create(defaults, **kwargs)

@@ -1,8 +1,8 @@
-# Guide de démarrage Multi-Tenant
+# Guide de démarrage Multi-Tenant avec Système d'Invitation
 
-## ✅ Le système multi-tenant a été implémenté avec succès !
+## ✅ Le système multi-tenant avec invitations sécurisées a été implémenté avec succès !
 
-### 🚀 Étapes pour tester immédiatement :
+### 🚀 Étapes pour tester le système d'invitation :
 
 #### 1. Appliquer les migrations
 ```bash
@@ -10,12 +10,14 @@ just manage makemigrations schools
 just manage migrate
 ```
 
+**Note**: Si vous voyez des warnings allauth concernant des méthodes dépréciées, ils ont été corrigés dans le code. Les warnings n'affectent pas le fonctionnement.
+
 #### 2. Créer un superutilisateur
 ```bash
 just manage createsuperuser
 ```
 
-#### 3. Créer votre premier établissement
+#### 3. Créer et inviter un établissement (NOUVEAU PROCESSUS)
 1. Aller sur `/admin/`
 2. Dans "Sites", créer un nouveau site :
    - Domain: `etb001.localhost`
@@ -23,29 +25,63 @@ just manage createsuperuser
 3. Dans "Schools > Établissements", créer un établissement :
    - Code: `etb001`
    - Nom: `École de Test`
+   - Email: `chef@ecole-test.fr` (email du futur chef d'établissement)
    - Site: sélectionner le site créé ci-dessus
    - Cocher "Actif"
+4. **ENVOYER L'INVITATION** :
+   - Sélectionner l'établissement créé
+   - Choisir l'action "Envoyer l'invitation par email"
+   - L'invitation sera envoyée automatiquement
 
-#### 4. Tester le système multi-tenant
-- Accéder à `/etb001/` → Page d'accueil tenant
-- Accéder à `/etb001/dashboard/` → Dashboard établissement
-- Accéder à `/etb001/users/` → Gestion utilisateurs
+#### 4. Accepter l'invitation (Simuler le chef d'établissement)
+1. Vérifier les emails dans la console ou les logs
+2. Copier le lien d'invitation (format: `/schools/invitation/etb001/uuid-token/`)
+3. Ouvrir le lien dans un navigateur
+4. Remplir le formulaire de création de compte :
+   - Nom: `Chef École`
+   - Email: `chef@ecole-test.fr` (doit correspondre à l'invitation)
+   - Mot de passe: `motdepasse123`
+5. Le compte sera créé automatiquement avec le rôle `chef_etablissement`
+
+#### 5. Tester l'accès sécurisé multi-tenant
+- ✅ Accéder à `/etb001/` → Page d'accueil tenant (connecté comme chef)
+- ✅ Accéder à `/etb001/dashboard/` → Dashboard établissement
+- ✅ Accéder à `/etb001/users/` → Gestion utilisateurs
+- ❌ Le super-admin ne peut PLUS accéder aux URLs tenant (sécurité renforcée)
 
 ### 🔧 URLs disponibles :
 
 #### URLs globales (sans tenant) :
-- `/` - Homepage globale
+- `/` - Homepage globale avec sélection établissement
 - `/about/` - Page À propos
-- `/admin/` - Administration Django
-- `/accounts/login/` - Connexion
-- `/api/` - API globale
+- `/admin/` - Administration Django (super-admin uniquement)
+- `/schools/invitation/<code>/<token>/` - **Acceptation d'invitation (nouveau)**
+- `/schools/admin/invitation-status/<id>/` - Statut invitation pour super-admin
+- `/schools/no-tenant/` - Page d'erreur tenant non trouvé
+- `/api/schema/` - Schéma API OpenAPI
+- `/api/docs/` - Documentation API
 
 #### URLs tenant (avec `/etb001/`) :
 - `/etb001/` - Homepage établissement
 - `/etb001/dashboard/` - Dashboard principal
+- `/etb001/accounts/login/` - **Connexion dans le contexte tenant**
+- `/etb001/accounts/signup/` - **Inscription dans le contexte tenant**
+- `/etb001/accounts/logout/` - **Déconnexion dans le contexte tenant**
 - `/etb001/users/` - Gestion utilisateurs
 
 ### 💡 Fonctionnalités implémentées :
+
+#### 🔐 **NOUVEAU : Système d'invitation sécurisé**
+- **Invitation par email** : Tokens UUID sécurisés avec expiration (7 jours)
+- **Création automatique de comptes** : Interface d'inscription intégrée
+- **Emails professionnels** : Templates HTML/texte avec branding
+- **Sécurité renforcée** : Super-admins bloqués de l'accès tenant
+- **Validation stricte** : Email doit correspondre à l'invitation
+- **Interface admin** : Gestion complète des invitations
+- **Statuts visuels** : En attente / Utilisée / Expirée
+- **Tests complets** : Couverture complète du système
+
+#### ✅ **Architecture Multi-tenant de base**
 
 #### ✅ Middleware TenantMiddleware
 - Résolution automatique du tenant depuis l'URL
@@ -74,27 +110,56 @@ just manage createsuperuser
 - Tests de performance avec cache
 - Tests cross-tenant bloqués
 
-### 🎯 Prochaines étapes pour votre app métier :
+#### ✅ Authentification tenant-aware
+- **Allauth intégré au système multi-tenant**
+- Login/Logout/Signup dans le contexte établissement
+- Redirections automatiques vers le dashboard tenant
+- Navigation adaptative selon le contexte
+- Context processor pour templates tenant-aware
 
-#### 1. Étendre le modèle User
+### 🔒 **NOUVEAU : Sécurité renforcée** :
+
+1. **Séparation stricte des rôles** :
+   - ✅ Super-admins : Gèrent uniquement les établissements via `/admin/`
+   - ✅ Chefs d'établissement : Gèrent leurs données via `/etb001/`
+   - ❌ **Aucun croisement** : Super-admins ne peuvent plus voir les données tenant
+
+2. **Validation d'accès automatique** :
+   - ✅ Utilisateur doit appartenir à l'établissement
+   - ✅ Établissement doit être actif
+   - ✅ Redirection automatique si tentative d'accès incorrect
+   - ✅ Messages d'erreur explicites
+
+3. **Protection contre les attaques** :
+   - ✅ Tokens UUID impossibles à deviner
+   - ✅ Expiration automatique des invitations
+   - ✅ Validation email stricte
+   - ✅ Une seule utilisation par invitation
+
+### 🎯 **SYSTÈME PRÊT** - Modèle User déjà étendu :
+
+Le modèle User a été automatiquement étendu avec :
 ```python
-# Dans xamu/users/models.py
+# ✅ DÉJÀ IMPLÉMENTÉ dans xamu/users/models.py
 class User(AbstractUser):
-    # ... champs existants ...
-    
     ROLE_CHOICES = [
         ('chef_etablissement', 'Chef d\'établissement'),
         ('professeur', 'Professeur'),
         ('cpe', 'CPE'),
         ('parent', 'Parent'),
     ]
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    etablissement = models.ForeignKey(
-        'schools.Etablissement', 
-        on_delete=models.CASCADE,
-        null=True, blank=True
-    )
+    
+    # Champs multi-tenant
+    etablissement = ForeignKey('schools.Etablissement', ...)
+    role = CharField(max_length=20, choices=ROLE_CHOICES)
+    
+    # Méthodes de permission
+    def has_etablissement_perm(self, perm): ...
+    def can_manage_etablissement(self): ...
+    # + contrainte DB : un seul chef par établissement
 ```
+
+### 🚀 Prochaines étapes pour votre app métier :
 
 #### 2. Créer vos modèles métier
 ```python
@@ -168,5 +233,24 @@ def send_absence_notifications(etablissement_id, absence_ids):
 - Forcer un tenant : `set_current_tenant(etablissement)`
 - Accéder à tous les tenants : `Model.objects.all_tenants()`
 - Context manager : `with TenantContext(etb): ...`
+
+### 🔧 Configuration finale :
+
+Les settings dans `config/settings/base.py` sont déjà configurés correctement :
+
+```python
+# Les adaptateurs allauth utilisent maintenant la logique multi-tenant
+ACCOUNT_ADAPTER = "xamu.users.adapters.AccountAdapter"  # ✅ Avec redirections tenant
+SOCIALACCOUNT_ADAPTER = "xamu.users.adapters.SocialAccountAdapter"  # ✅ Avec redirections tenant
+
+# Context processor pour variables tenant dans templates
+"xamu.schools.context_processors.tenant_context",  # ✅ Ajouté
+
+# Middleware tenant activé
+"xamu.schools.middleware.TenantMiddleware",  # ✅ Activé
+
+# App schools ajoutée
+"xamu.schools",  # ✅ Ajoutée
+```
 
 Le système est **prêt en production** ! 🎉

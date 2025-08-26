@@ -20,7 +20,7 @@
                 <p>
                     {% trans "Système de gestion des absences scolaires multi-tenant." %}
                 </p>
-                <a class="btn btn-primary btn-lg" href="/{{ request.tenant.code }}/dashboard/" role="button">
+                <a class="btn btn-primary btn-lg" href="{% url 'tenant:dashboard' request.tenant.code %}" role="button">
                     {% trans "Accéder au dashboard" %}
                 </a>
             </div>
@@ -67,15 +67,15 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group list-group-flush">
-                        <a href="/{{ request.tenant.code }}/dashboard/" class="list-group-item list-group-item-action">
+                        <a href="{% url 'tenant:dashboard' request.tenant.code %}" class="list-group-item list-group-item-action">
                             <i class="fas fa-tachometer-alt me-2"></i>
                             {% trans "Dashboard principal" %}
                         </a>
-                        <a href="/{{ request.tenant.code }}/users/" class="list-group-item list-group-item-action">
+                        <a href="{% url 'users:redirect' %}" class="list-group-item list-group-item-action">
                             <i class="fas fa-users me-2"></i>
                             {% trans "Gestion des utilisateurs" %}
                         </a>
-                        <a href="/admin/" class="list-group-item list-group-item-action">
+                        <a href="{% url 'admin:index' %}" class="list-group-item list-group-item-action">
                             <i class="fas fa-cog me-2"></i>
                             {% trans "Administration" %}
                         </a>
