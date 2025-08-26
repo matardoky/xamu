@@ -3,10 +3,11 @@ Signaux pour le système d'invitation allauth.
 """
 
 import logging
-from django.dispatch import receiver
-from allauth.account.signals import user_signed_up, email_confirmed
-from django.shortcuts import redirect
+
+from allauth.account.signals import email_confirmed
+from allauth.account.signals import user_signed_up
 from django.contrib import messages
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
 from .models import EtablissementInvitation
@@ -21,36 +22,36 @@ def handle_invitation_signup(sender, request, user, **kwargs):
     Vérifie si c'est dans le cadre d'une invitation.
     """
     logger.info(f"Signal user_signed_up reçu pour {user.email}")
-    
+
     # Vérifier si il y a un token d'invitation en session
-    invitation_token = request.session.get('invitation_token')
+    invitation_token = request.session.get("invitation_token")
     if invitation_token:
         logger.info(f"Token d'invitation trouvé en session: {invitation_token}")
-        
+
         try:
             invitation = EtablissementInvitation.objects.get(token=invitation_token)
-            
+
             if invitation.is_valid and invitation.email == user.email:
                 # Associer l'utilisateur à l'établissement
                 user.etablissement = invitation.etablissement
-                user.role = 'chef_etablissement'
+                user.role = "chef_etablissement"
                 user.save()
-                
+
                 # Marquer l'invitation comme utilisée
                 invitation.use_invitation(user)
-                
+
                 logger.info(f"Utilisateur {user.email} associé à l'établissement {invitation.etablissement.nom}")
-                
+
                 # Nettoyer la session
-                del request.session['invitation_token']
-                
+                del request.session["invitation_token"]
+
                 messages.success(request, _(
-                    "Félicitations ! Vous êtes maintenant chef de l'établissement {}."
+                    "Félicitations ! Vous êtes maintenant chef de l'établissement {}.",
                 ).format(invitation.etablissement.nom))
-                
+
             else:
-                logger.warning(f"Invitation invalide ou email non correspondant")
-                
+                logger.warning("Invitation invalide ou email non correspondant")
+
         except EtablissementInvitation.DoesNotExist:
             logger.warning(f"Invitation avec token {invitation_token} non trouvée")
 
@@ -63,7 +64,7 @@ def handle_email_confirmed(sender, request, email_address, **kwargs):
     """
     user = email_address.user
     logger.info(f"Signal email_confirmed reçu pour {user.email}")
-    
+
     if user.etablissement:
         logger.info(f"Utilisateur {user.email} a un établissement: {user.etablissement.nom}")
         # La redirection sera gérée par l'AccountAdapter

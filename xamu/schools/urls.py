@@ -1,6 +1,7 @@
 from django.urls import path
 
-from xamu.schools.views import AcceptInvitationView, InvitationStatusView
+from xamu.schools.views import AcceptInvitationView
+from xamu.schools.views import InvitationStatusView
 
 app_name = "schools"
 

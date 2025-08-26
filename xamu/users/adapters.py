@@ -6,6 +6,7 @@ from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 
 from xamu.schools.models import Etablissement, EtablissementInvitation
 
@@ -26,7 +27,7 @@ class AccountAdapter(DefaultAccountAdapter):
                     return True
             except EtablissementInvitation.DoesNotExist:
                 pass
-        return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", False)
+        return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
 
     def save_user(self, request, user, form, commit=True):
         user = super().save_user(request, user, form, commit=False)
@@ -78,17 +79,11 @@ class AccountAdapter(DefaultAccountAdapter):
         # Fallback vers la homepage globale
         return "/"
     
-    def get_email_verification_redirect_url(self, request) -> str:
+    def get_email_confirmation_redirect_url(self, request: HttpRequest) -> str:
         """
-        Redirige vers le dashboard du tenant après vérification email.
+        Redirige vers la page de connexion après vérification email.
         """
-        from xamu.schools.middleware import get_current_tenant
-        
-        tenant = get_current_tenant()
-        if tenant:
-            return f"/{tenant.code}/dashboard/"
-        
-        return "/"
+        return reverse("account_login")
     
     def get_signup_redirect_url(self, request: HttpRequest) -> str:
         """

@@ -100,8 +100,17 @@ coverage html
 
 ### Key Components
 
+#### Multi-Tenant Architecture (`xamu/schools/`)
+- **Établissement-based multi-tenancy**: Each school is a separate tenant with isolated data
+- **Secure invitation system**: Schools can invite users via email with UUID tokens
+- **Tenant middleware**: Automatic tenant resolution from URL patterns (`/etb001/`)
+- **Auto-filtering**: All database queries automatically filtered by tenant context
+- **Thread-local storage**: Current tenant available globally via `request.tenant`
+- **Permission system**: Role-based access (chef_etablissement, professeur, cpe, parent)
+
 #### User Management (`xamu/users/`)
 - Custom User model with email-based authentication (no username)
+- Extended with tenant-aware fields: `etablissement` and `role`
 - Django Allauth integration for social authentication
 - REST API endpoints for user operations
 - Comprehensive test coverage
@@ -110,6 +119,7 @@ coverage html
 - Base settings with environment-specific overrides
 - Local, production, and test configurations
 - Environment variable management with django-environ
+- Multi-tenant context processors and middleware configured
 
 #### API Structure (`config/api_router.py`)
 - Centralized API routing with DRF
@@ -126,6 +136,13 @@ coverage html
 - PostgreSQL (configured via DATABASE_URL environment variable)
 - Atomic transactions enabled by default
 - Migration files in standard Django locations
+
+### Multi-Tenant URL Structure
+- **Global URLs**: `/admin/`, `/api/`, `/about/` - no tenant context
+- **Tenant URLs**: `/{tenant_code}/` - all URLs prefixed with school code
+- **Invitation URLs**: `/schools/invitation/{code}/{token}/` - secure signup process
+- **Tenant Resolution**: Automatic from URL, cached in Redis for performance
+- **Access Control**: Users can only access their assigned school's tenant URLs
 
 ### Static Assets
 - Webpack bundles in `xamu/static/webpack_bundles/`
@@ -160,6 +177,35 @@ coverage html
 ### Email Development
 - Mailpit container for local email testing
 - Access web interface at http://127.0.0.1:8025
+- School invitation emails automatically sent with UUID tokens
+
+### Multi-Tenant Development Patterns
+
+#### Creating Tenant-Aware Models
+```python
+from xamu.schools.mixins import TenantMixin
+
+class YourModel(TenantMixin):
+    name = models.CharField(max_length=100)
+    # etablissement field automatically added
+    # objects automatically filtered by current tenant
+```
+
+#### Using Tenant Context
+```python
+from xamu.schools.utils import TenantContext
+
+# In views: request.tenant is automatically available
+# In Celery tasks or management commands:
+with TenantContext(etablissement):
+    # All operations filtered by this tenant
+    pass
+```
+
+#### Testing Multi-Tenant Code
+- Use `TenantContext` in tests for isolation
+- Test data automatically cleaned between tenants
+- Factory Boy integration with tenant-aware factories
 
 ## Key Configuration Files
 - `pyproject.toml`: Python tooling configuration (pytest, mypy, ruff, djlint)
