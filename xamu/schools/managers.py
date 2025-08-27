@@ -37,14 +37,16 @@ class TenantQuerySet(QuerySet):
         """
         Override pour appliquer le filtrage tenant automatiquement
         """
-        clone = self._clone()
+        # Si le filtrage tenant est désactivé, utiliser directement la méthode parent
+        if getattr(self, 'tenant_filtering_disabled', False):
+            return super()._filter_or_exclude(negate, *args, **kwargs)
         
-        # Appliquer le filtrage tenant si activé
-        if not clone.tenant_filtering_disabled:
-            clone = self._apply_tenant_filter(clone, negate)
+        # Appliquer les filtres normaux en désactivant temporairement le tenant filtering
+        self.tenant_filtering_disabled = True
+        clone = super()._filter_or_exclude(negate, *args, **kwargs)
+        self.tenant_filtering_disabled = False
         
-        # Appliquer les autres filtres normalement
-        return super(TenantQuerySet, clone)._filter_or_exclude(negate, *args, **kwargs)
+        return clone
     
     def all_tenants(self):
         """
@@ -85,10 +87,13 @@ class TenantManager(models.Manager):
         queryset = TenantQuerySet(self.model, using=self._db)
         
         # Appliquer le filtrage tenant par défaut
-        if hasattr(self.model, '_tenant_field') and not queryset.tenant_filtering_disabled:
+        if hasattr(self.model, '_tenant_field'):
             tenant = get_current_tenant()
             if tenant:
+                # Désactiver temporairement le filtrage pour éviter la récursion
+                queryset.tenant_filtering_disabled = True
                 queryset = queryset.filter(**{self.model._tenant_field: tenant})
+                queryset.tenant_filtering_disabled = False
         
         return queryset
     

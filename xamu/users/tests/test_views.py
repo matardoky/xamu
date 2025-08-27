@@ -17,7 +17,7 @@ from xamu.users.models import User
 from xamu.users.tests.factories import UserFactory
 from xamu.users.views import UserRedirectView
 from xamu.users.views import UserUpdateView
-from xamu.users.views import user_detail_view
+from xamu.users.views import UserDetailView
 
 pytestmark = pytest.mark.django_db
 
@@ -86,14 +86,14 @@ class TestUserDetailView:
     def test_authenticated(self, user: User, rf: RequestFactory):
         request = rf.get("/fake-url/")
         request.user = UserFactory()
-        response = user_detail_view(request, pk=user.pk)
+        response = UserDetailView.as_view()(request, pk=user.pk)
 
         assert response.status_code == HTTPStatus.OK
 
     def test_not_authenticated(self, user: User, rf: RequestFactory):
         request = rf.get("/fake-url/")
         request.user = AnonymousUser()
-        response = user_detail_view(request, pk=user.pk)
+        response = UserDetailView.as_view()(request, pk=user.pk)
         login_url = reverse(settings.LOGIN_URL)
 
         assert isinstance(response, HttpResponseRedirect)

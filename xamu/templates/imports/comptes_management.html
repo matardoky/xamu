@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{% translate "Gestion des Comptes Générés" %}</h1>
+
+    <a href="{% url 'imports:dashboard' tenant_code=request.tenant.code %}" class="btn btn-secondary mb-3">{% translate "Retour au Tableau de Bord des Imports" %}</a>
+
+    {% if comptes %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>{% translate "Utilisateur" %}</th>
+                    <th>{% translate "Email" %}</th>
+                    <th>{% translate "Rôle" %}</th>
+                    <th>{% translate "Session d'Import" %}</th>
+                    <th>{% translate "Mot de passe temporaire" %}</th>
+                    <th>{% translate "Fiche imprimée" %}</th>
+                    <th>{% translate "Distribué" %}</th>
+                    <th>{% translate "Date de distribution" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compte in comptes %}
+                <tr>
+                    <td>{{ compte.user.get_full_name }}</td>
+                    <td>{{ compte.user.email }}</td>
+                    <td>{{ compte.user.get_role_display }}</td>
+                    <td><a href="{% url 'imports:detail' tenant_code=request.tenant.code session_id=compte.import_session.id %}">{{ compte.import_session.nom_session }}</a></td>
+                    <td>{{ compte.mot_de_passe_temporaire }}</td>
+                    <td>{% if compte.fiche_imprimee %}{% translate "Oui" %}{% else %}{% translate "Non" %}{% endif %}</td>
+                    <td>{% if compte.distribue %}{% translate "Oui" %}{% else %}{% translate "Non" %}{% endif %}</td>
+                    <td>{{ compte.date_distribution|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        {% translate "Aucun compte généré trouvé pour cet établissement." %}</div>
+    {% endif %}
+</div>
+{% endblock content %}

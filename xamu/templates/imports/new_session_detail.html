@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Détail de la session d'import" %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="h3 mb-4 text-gray-800">{% trans "Détail de la session" %}: {{ session.nom_session }}</h1>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{% trans "Informations" %}</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>{% trans "Type:" %}</strong> {{ session.get_type_import_display }}</p>
+                    <p><strong>{% trans "Statut:" %}</strong> <span class="badge badge-{{ session.statut }}">{{ session.get_statut_display }}</span></p>
+                    <p><strong>{% trans "Créé le:" %}</strong> {{ session.created_at }}</p>
+                    <p><strong>{% trans "Créé par:" %}</strong> {{ session.created_by }}</p>
+                    {% if session.completed_at %}
+                    <p><strong>{% trans "Terminé le:" %}</strong> {{ session.completed_at }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{% trans "Actions" %}</h6>
+                </div>
+                <div class="card-body">
+                    {% if actions.can_validate %}
+                        <a href="{% url 'imports:validate' tenant_code=request.tenant.code session_id=session.id %}" class="btn btn-primary">{% trans "Valider" %}</a>
+                    {% endif %}
+                    {% if actions.can_execute %}
+                        <form method="post" action="{% url 'imports:execute' tenant_code=request.tenant.code session_id=session.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">{% trans "Exécuter" %}</button>
+                        </form>
+                    {% endif %}
+                    {% if actions.can_print %}
+                        <div class="dropdown d-inline">
+                            <button class="btn btn-info dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                {% trans "Imprimer les identifiants" %}
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <a class="dropdown-item" href="{% url 'imports:print' tenant_code=request.tenant.code session_id=session.id type_compte='personnel' %}?format=individual">{% trans "Personnel (individuel)" %}</a>
+                                <a class="dropdown-item" href="{% url 'imports:print' tenant_code=request.tenant.code session_id=session.id type_compte='personnel' %}?format=list">{% trans "Personnel (liste)" %}</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{% url 'imports:print' tenant_code=request.tenant.code session_id=session.id type_compte='parents' %}?format=individual">{% trans "Parents (individuel)" %}</a>
+                                <a class="dropdown-item" href="{% url 'imports:print' tenant_code=request.tenant.code session_id=session.id type_compte='parents' %}?format=list">{% trans "Parents (liste)" %}</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{% trans "Logs" %}</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "Niveau" %}</th>
+                            <th>{% trans "Message" %}</th>
+                            <th>{% trans "Ligne CSV" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp }}</td>
+                            <td><span class="badge badge-{{ log.niveau }}">{{ log.get_niveau_display }}</span></td>
+                            <td>{{ log.message }}</td>
+                            <td>{{ log.ligne_csv|default:"N/A" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">{% trans "Aucun log pour cette session" %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

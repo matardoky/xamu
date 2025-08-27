@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{% translate "Détails de la Session d'Import" %}</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>{{ session.nom_session }} ({{ session.get_type_import_display }})</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>{% translate "Statut" %}:</strong> {{ session.get_statut_display }}</p>
+            <p><strong>{% translate "Fichier CSV" %}:</strong> <a href="{{ session.fichier_csv.url }}" target="_blank">{{ session.fichier_csv.name }}</a></p>
+            <p><strong>{% translate "Créé le" %}:</strong> {{ session.created_at|date:"d/m/Y H:i" }}</p>
+            <p><strong>{% translate "Créé par" %}:</strong> {{ session.created_by.get_full_name }}</p>
+            <p><strong>{% translate "Comptes créés" %}:</strong> {{ session.nb_comptes_crees }}</p>
+            {% if session.resultats %}
+                <p><strong>{% translate "Résultats" %}:</strong></p>
+                <ul>
+                {% for key, value in session.resultats.items %}
+                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'imports:dashboard' tenant_code=request.tenant.code %}" class="btn btn-secondary">{% translate "Retour au Tableau de Bord" %}</a>
+            <a href="{% url 'imports:comptes_management' tenant_code=request.tenant.code %}" class="btn btn-info">{% translate "Voir tous les comptes générés" %}</a> {# New button #}
+            <form action="{% url 'imports:delete' tenant_code=request.tenant.code session_id=session.id %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" onclick="return confirm('{% translate "Êtes-vous sûr de vouloir supprimer cette session d\'import ?" %}')">{% translate "Supprimer la Session" %}</button>
+            </form>
+        </div>
+    </div>
+
+    <h2 class="mt-4">{% translate "Comptes Générés" %}</h2>
+    {% if comptes_generes %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>{% translate "Utilisateur" %}</th>
+                    <th>{% translate "Mot de passe temporaire" %}</th>
+                    <th>{% translate "Fiche imprimée" %}</th>
+                    <th>{% translate "Distribué" %}</th>
+                    <th>{% translate "Date de distribution" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compte in comptes_generes %}
+                <tr>
+                    <td>{{ compte.user.get_full_name }} ({{ compte.user.email }})</td>
+                    <td>{{ compte.mot_de_passe_temporaire }}</td>
+                    <td>{% if compte.fiche_imprimee %}{% translate "Oui" %}{% else %}{% translate "Non" %}{% endif %}</td>
+                    <td>{% if compte.distribue %}{% translate "Oui" %}{% else %}{% translate "Non" %}{% endif %}</td>
+                    <td>{{ compte.date_distribution|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        {% translate "Aucun compte n\'a été généré pour cette session." %}
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}

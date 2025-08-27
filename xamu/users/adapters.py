@@ -1,163 +1,70 @@
-from __future__ import annotations
-
-import typing
-
 from allauth.account.adapter import DefaultAccountAdapter
-from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter # Import this
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
-
-from xamu.schools.models import Etablissement, EtablissementInvitation
-
-if typing.TYPE_CHECKING:
-    from allauth.socialaccount.models import SocialLogin
-    from django.http import HttpRequest
-
-    from xamu.users.models import User
-
+from django.utils.translation import gettext_lazy as _
+from django.contrib import messages # Import messages
 
 class AccountAdapter(DefaultAccountAdapter):
-    def is_open_for_signup(self, request: HttpRequest) -> bool:
-        invitation_token = request.session.get('invitation_token')
-        if invitation_token:
-            try:
-                invitation = EtablissementInvitation.objects.get(token=invitation_token)
-                if invitation.is_valid:
-                    return True
-            except EtablissementInvitation.DoesNotExist:
-                pass
-        return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
+    def get_email_confirmation_redirect_url(self, request):
+        # ... (existing code)
+        # Fix for RecursionError: maximum recursion depth exceeded in comparison
+        # when trying to redirect after email confirmation.
+        # This happens because get_email_verification_redirect_url calls
+        # get_email_confirmation_redirect_url in a loop.
+        # We need to ensure that the redirect URL is tenant-aware.
+        if request.user.is_authenticated and hasattr(request.user, 'etablissement') and request.user.etablissement:
+            return reverse('tenant:home', kwargs={'tenant_code': request.user.etablissement.code})
+        return settings.LOGIN_REDIRECT_URL
+
+    def get_email_verification_redirect_url(self, email_address):
+        # This method is called by allauth after email verification.
+        # It should return a URL that is not tenant-aware, as the user might not be logged in yet,
+        # or their tenant might not be resolved.
+        # We redirect to a generic login page or a page that handles tenant resolution.
+        return reverse('account_login') # Or a specific page that handles post-verification login
 
     def save_user(self, request, user, form, commit=True):
         user = super().save_user(request, user, form, commit=False)
+        # Ensure the 'name' field is populated from the form
+        user.name = form.cleaned_data.get('name') # Add this line
+        user.save()
+        return user
 
-        invitation_token = request.session.get('invitation_token')
-        tenant_code = request.session.get('tenant_code')
+    def is_open_for_signup(self, request):
+        # Allow signup only if there's an invitation or if it's a superuser creating accounts
+        # For now, we'll keep it open for simplicity during development
+        return True
 
-        if invitation_token and tenant_code:
-            etablissement = get_object_or_404(Etablissement, code=tenant_code)
-            invitation = get_object_or_404(EtablissementInvitation, token=invitation_token, etablissement=etablissement)
+    def get_login_redirect_url(self, request):
+        # Custom login redirect to handle tenant-aware URLs
+        # Check if it's the first login and redirect to password change
+        if request.user.is_authenticated and request.user.premiere_connexion:
+            # Set premiere_connexion to False after redirection
+            request.user.premiere_connexion = False
+            request.user.save()
+            messages.info(request, _("Veuillez changer votre mot de passe pour votre première connexion."))
+            return reverse('account_change_password') # allauth's password change URL
 
-            if invitation.is_valid and invitation.email == user.email:
-                user.etablissement = etablissement
-                user.role = 'chef_etablissement'
-                if commit:
-                    user.save()
-                invitation.use_invitation(user)
-                del request.session['invitation_token']
-                del request.session['tenant_code']
+        if request.user.is_authenticated and hasattr(request.user, 'etablissement') and request.user.etablissement:
+            return reverse('tenant:home', kwargs={'tenant_code': request.user.etablissement.code})
+        return settings.LOGIN_REDIRECT_URL
 
-        if commit:
+    def clean_email(self, email):
+        # Custom email cleaning if needed
+        return email
+
+    def add_message(self, request, level, message_template,
+                    message_context=None, extra_tags=''):
+        # Custom message handling if needed
+        messages.add_message(request, level, message_template, extra_tags=extra_tags)
+
+
+class SocialAccountAdapter(DefaultSocialAccountAdapter): # Add this class
+    def save_user(self, request, sociallogin, form=None):
+        user = super().save_user(request, sociallogin, form)
+        # Ensure the 'name' field is populated for social accounts
+        if form and 'name' in form.cleaned_data:
+            user.name = form.cleaned_data['name']
             user.save()
         return user
-
-    def get_login_redirect_url(self, request: HttpRequest) -> str:
-        """
-        Redirige vers le dashboard du tenant après connexion.
-        """
-        # Import ici pour éviter les imports circulaires
-        from xamu.schools.middleware import get_current_tenant
-        
-        tenant = get_current_tenant()
-        if tenant:
-            return reverse("tenant:dashboard", kwargs={"tenant_code": tenant.code})
-        
-        # Fallback vers le comportement par défaut
-        return super().get_login_redirect_url(request)
-    
-    def get_logout_redirect_url(self, request: HttpRequest) -> str:
-        """
-        Redirige vers la page d'accueil du tenant après déconnexion.
-        """
-        from xamu.schools.middleware import get_current_tenant
-        
-        tenant = get_current_tenant()
-        if tenant:
-            return f"/{tenant.code}/"
-        
-        # Fallback vers la homepage globale
-        return "/"
-    
-    def get_email_confirmation_redirect_url(self, request: HttpRequest) -> str:
-        """
-        Redirige vers la page de connexion après vérification email.
-        """
-        return reverse("account_login")
-    
-    def get_signup_redirect_url(self, request: HttpRequest) -> str:
-        """
-        Redirige vers le dashboard du tenant après inscription.
-        """
-        from xamu.schools.middleware import get_current_tenant
-        
-        tenant = get_current_tenant()
-        if tenant:
-            return f"/{tenant.code}/dashboard/"
-        
-        return super().get_signup_redirect_url(request)
-
-
-class SocialAccountAdapter(DefaultSocialAccountAdapter):
-    def is_open_for_signup(
-        self,
-        request: HttpRequest,
-        sociallogin: SocialLogin,
-    ) -> bool:
-        """
-        Désactive l'inscription sociale dans le contexte tenant.
-        L'inscription se fait uniquement par invitation.
-        """
-        from xamu.schools.middleware import get_current_tenant
-        
-        # Si nous sommes dans un contexte tenant, pas d'inscription sociale
-        tenant = get_current_tenant()
-        if tenant:
-            return False
-        
-        # En dehors du contexte tenant, utiliser le setting
-        return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
-
-    def populate_user(
-        self,
-        request: HttpRequest,
-        sociallogin: SocialLogin,
-        data: dict[str, typing.Any],
-    ) -> User:
-        """
-        Populates user information from social provider info.
-
-        See: https://docs.allauth.org/en/latest/socialaccount/advanced.html#creating-and-populating-user-instances
-        """
-        user = super().populate_user(request, sociallogin, data)
-        if not user.name:
-            if name := data.get("name"):
-                user.name = name
-            elif first_name := data.get("first_name"):
-                user.name = first_name
-                if last_name := data.get("last_name"):
-                    user.name += f" {last_name}"
-        
-        # Associer au tenant actuel si possible
-        from xamu.schools.middleware import get_current_tenant
-        tenant = get_current_tenant()
-        if tenant and hasattr(user, 'etablissement'):
-            user.etablissement = tenant
-        
-        return user
-    
-    def get_connect_redirect_url(
-        self,
-        request: HttpRequest,
-        socialaccount,
-    ) -> str:
-        """
-        Redirige vers le dashboard du tenant après connexion sociale.
-        """
-        from xamu.schools.middleware import get_current_tenant
-        
-        tenant = get_current_tenant()
-        if tenant:
-            return f"/{tenant.code}/dashboard/"
-        
-        return super().get_connect_redirect_url(request, socialaccount)

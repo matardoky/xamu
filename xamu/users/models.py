@@ -93,6 +93,12 @@ class User(AbstractUser):
             return reverse("tenant:users:detail", kwargs={"tenant_code": self.etablissement.code, "pk": self.pk})
         return reverse("users:detail", kwargs={"pk": self.id})
     
+    def get_full_name(self) -> str:
+        """
+        Return the name for the user.
+        """
+        return self.name
+    
     def has_role(self, role_name: str) -> bool:
         """
         Vérifie si l'utilisateur a un rôle spécifique.

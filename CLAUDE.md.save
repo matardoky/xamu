@@ -301,3 +301,5 @@ class YourBusinessModel(TenantMixin):
 - `docker-compose.local.yml`: Local development environment
 - `webpack/`: Frontend build configuration
 - `config/settings/`: Django settings modules
+
+

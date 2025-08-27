@@ -241,7 +241,7 @@ class AcceptInvitationViewTest(TestCase):
     def test_accept_invitation_invalid_etablissement(self):
         """Test avec code établissement invalide"""
         url = reverse("schools:accept_invitation", kwargs={
-            "etablissement_code": "invalid",
+            "tenant_code": "invalid",
             "token": str(self.invitation.token),
         })
 
@@ -251,7 +251,7 @@ class AcceptInvitationViewTest(TestCase):
     def test_accept_invitation_invalid_token(self):
         """Test avec token invalide"""
         url = reverse("schools:accept_invitation", kwargs={
-            "etablissement_code": self.etablissement.code,
+            "tenant_code": self.etablissement.code,
             "token": str(uuid4()),
         })
 
@@ -265,7 +265,7 @@ class AcceptInvitationViewTest(TestCase):
         self.invitation.save()
 
         url = reverse("schools:accept_invitation", kwargs={
-            "etablissement_code": self.etablissement.code,
+            "tenant_code": self.etablissement.code,
             "token": str(self.invitation.token),
         })
 
@@ -283,7 +283,7 @@ class AcceptInvitationViewTest(TestCase):
         self.invitation.use_invitation(user)
 
         url = reverse("schools:accept_invitation", kwargs={
-            "etablissement_code": self.etablissement.code,
+            "tenant_code": self.etablissement.code,
             "token": str(self.invitation.token),
         })
 
@@ -304,7 +304,7 @@ class AcceptInvitationViewTest(TestCase):
         self.client.force_login(user)
 
         url = reverse("schools:accept_invitation", kwargs={
-            "etablissement_code": self.etablissement.code,
+            "tenant_code": self.etablissement.code,
             "token": str(self.invitation.token),
         })
 
@@ -343,7 +343,7 @@ class AcceptInvitationViewTest(TestCase):
         self.client.force_login(user)
 
         url = reverse("schools:accept_invitation", kwargs={
-            "etablissement_code": self.etablissement.code,
+            "tenant_code": self.etablissement.code,
             "token": str(self.invitation.token),
         })
 

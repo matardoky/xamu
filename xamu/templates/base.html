@@ -76,6 +76,13 @@
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'tenant:dashboard' tenant_code=request.tenant.code %}">{% translate "Dashboard" %}</a>
               </li>
+              {% if request.user.is_authenticated and request.user.is_chef_etablissement %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'imports:dashboard' tenant_code=request.tenant.code %}">
+                    <i class="fas fa-upload me-1"></i>{% translate "Imports" %}
+                  </a>
+                </li>
+              {% endif %}
             {% else %}
               {# Navigation globale (landing pages) #}
               <li class="nav-item active">

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Liste Parents</title>
+    <style>
+        body { font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Liste des identifiants des parents - {{ etablissement.nom }}</h1>
+    <p>Session d'import: {{ session.nom_session }}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Utilisateur</th>
+                <th>Email / Identifiant</th>
+                <th>Mot de passe temporaire</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for compte in comptes %}
+            <tr>
+                <td>{{ compte.user.get_full_name }}</td>
+                <td>{{ compte.user.email }}</td>
+                <td>{{ compte.mot_de_passe_temporaire }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

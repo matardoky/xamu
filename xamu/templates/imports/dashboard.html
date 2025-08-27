@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{% translate "Tableau de bord des Imports" %}</h1>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>{% translate "Sessions d'Import" %}</h2>
+        <a href="{% url 'imports:create' tenant_code=request.tenant.code %}" class="btn btn-primary">
+            {% translate "Nouvelle Session d'Import" %}
+        </a>
+    </div>
+
+    {% if sessions %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>{% translate "Nom de la Session" %}</th>
+                    <th>{% translate "Type d'Import" %}</th>
+                    <th>{% translate "Statut" %}</th>
+                    <th>{% translate "Créé le" %}</th>
+                    <th>{% translate "Créé par" %}</th>
+                    <th>{% translate "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                <tr>
+                    <td>{{ session.nom_session }}</td>
+                    <td>{{ session.get_type_import_display }}</td>
+                    <td>{{ session.get_statut_display }}</td>
+                    <td>{{ session.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>{{ session.created_by.get_full_name }}</td>
+                    <td>
+                        <a href="{% url 'imports:detail' tenant_code=request.tenant.code session_id=session.id %}" class="btn btn-sm btn-info">
+                            {% translate "Détails" %}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        {% translate "Aucune session d'import n'a été créée pour le moment." %}
+        <a href="{% url 'imports:create' tenant_code=request.tenant.code %}" class="alert-link">{% translate "Créez-en une maintenant !" %}</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}

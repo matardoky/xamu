@@ -92,6 +92,7 @@ LOCAL_APPS = [
     "xamu.academic",  # Academic management (classes, students, subjects)
     "xamu.attendance",  # Attendance tracking
     "xamu.notifications",  # Notification system
+    "xamu.imports",  # CSV import system
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

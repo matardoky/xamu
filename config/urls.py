@@ -25,6 +25,8 @@ urlpatterns = [
     path("schools/", include("xamu.schools.urls")),
     # URLs multi-tenant - IMPORTANT: Toute l'authentification est dans le contexte tenant
     path("<str:tenant_code>/", include("xamu.schools.tenant_urls", namespace="tenant")),
+    # Import CSV dans le contexte tenant
+    path("<str:tenant_code>/imports/", include("xamu.imports.urls")),
     
     # Allauth urls
     path('accounts/', include('allauth.urls')),

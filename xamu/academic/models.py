@@ -118,6 +118,14 @@ class Classe(TenantMixin):
         help_text=_("Classe active dans l'établissement")
     )
     
+    # Options d'import pour traçabilité
+    options_import = models.JSONField(
+        _("Options d'import"),
+        default=dict,
+        blank=True,
+        help_text=_("Données de traçabilité d'import (professeur principal en attente, etc.)")
+    )
+    
     # Métadonnées
     created_at = models.DateTimeField(_("Créé le"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Modifié le"), auto_now=True)
@@ -145,6 +153,59 @@ class Classe(TenantMixin):
     def places_disponibles(self):
         """Retourne le nombre de places disponibles."""
         return max(0, self.effectif_max - self.effectif_actuel)
+    
+    @property
+    def professeur_principal_en_attente(self):
+        """Vérifie si un professeur principal est en attente."""
+        return bool(self.options_import.get('professeur_principal_email_pending'))
+    
+    def lier_professeur_principal_si_possible(self):
+        """Tente de lier automatiquement le professeur principal si disponible."""
+        if not self.professeur_principal_en_attente:
+            return False
+        
+        email_pending = self.options_import.get('professeur_principal_email_pending')
+        if not email_pending:
+            return False
+        
+        try:
+            from xamu.users.models import User
+            professeur = User.objects.get(
+                email=email_pending,
+                etablissement=self.etablissement,
+                role='professeur',
+                is_active=True
+            )
+            
+            # Lier le professeur principal
+            self.professeur_principal = professeur
+            
+            # Nettoyer les options d'import
+            self.options_import.pop('professeur_principal_email_pending', None)
+            self.save()
+            
+            # Log de la liaison
+            from xamu.imports.models import ImportLog, ImportSession
+            import_session_id = self.options_import.get('import_session_id')
+            if import_session_id:
+                try:
+                    session = ImportSession.objects.get(id=import_session_id)
+                    ImportLog.log_info(
+                        session,
+                        f"Liaison automatique professeur principal : {professeur.name} -> {self.nom}",
+                        contexte={
+                            'classe_id': self.id,
+                            'professeur_id': professeur.id,
+                            'liaison_automatique': True
+                        }
+                    )
+                except ImportSession.DoesNotExist:
+                    pass
+            
+            return True
+            
+        except User.DoesNotExist:
+            return False
     
     def clean(self):
         # Validation de l'année scolaire

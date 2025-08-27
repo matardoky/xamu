@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Valider la session d'import" %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="h3 mb-4 text-gray-800">{% trans "Valider la session" %}: {{ session.nom_session }}</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{% trans "Validation et aperçu" %}</h6>
+        </div>
+        <div class="card-body">
+            {% if not validation_result.is_valid %}
+                <div class="alert alert-danger">
+                    <strong>{% trans "Erreurs de validation:" %}</strong>
+                    <ul>
+                        {% for error in validation_result.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {% if validation_result.is_valid %}
+                <div class="alert alert-success">
+                    {% blocktrans with count=validation_result.stats.lignes_valides %}
+                    {{ count }} lignes ont été validées avec succès.
+                    {% endblocktrans %}
+                </div>
+
+                <h5 class="mt-4">{% trans "Aperçu des données" %}</h5>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            {% for col in validation_result.preview_data.0.keys %}
+                                <th>{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in validation_result.preview_data %}
+                            <tr>
+                                {% for key, value in row.items %}
+                                    <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% if can_execute %}
+                <form method="post" action="{% url 'imports:execute' tenant_code=request.tenant.code session_id=session.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">{% trans "Exécuter l'import" %}</button>
+                </form>
+                {% endif %}
+            {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">{% trans "Lancer la validation" %}</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

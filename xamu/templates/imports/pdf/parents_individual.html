@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Fiches Parents</title>
+    <style>
+        body { font-family: sans-serif; }
+        .fiche { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; page-break-inside: avoid; }
+        h1 { font-size: 18px; }
+        p { font-size: 14px; }
+    </style>
+</head>
+<body>
+    {% for compte in comptes %}
+    <div class="fiche">
+        <h1>Identifiants de connexion - {{ etablissement.nom }}</h1>
+        <p><strong>Utilisateur:</strong> {{ compte.user.get_full_name }}</p>
+        <p><strong>Email / Identifiant:</strong> {{ compte.user.email }}</p>
+        <p><strong>Mot de passe temporaire:</strong> {{ compte.mot_de_passe_temporaire }}</p>
+        <hr>
+        <p><strong>Instructions:</strong></p>
+        <ol>
+            <li>Connectez-vous sur {{ request.tenant.get_absolute_url }}</li>
+            <li>Utilisez l'email et le mot de passe temporaire ci-dessus.</li>
+            <li>Vous serez invité à changer votre mot de passe lors de votre première connexion.</li>
+        </ol>
+    </div>
+    {% endfor %}
+</body>
+</html>

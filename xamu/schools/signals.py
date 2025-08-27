@@ -70,3 +70,33 @@ def handle_email_confirmed(sender, request, email_address, **kwargs):
         # La redirection sera gérée par l'AccountAdapter
     else:
         logger.info(f"Utilisateur {user.email} n'a pas d'établissement")
+
+
+@receiver(user_signed_up)
+def link_import_invitations(sender, request, user, **kwargs):
+    """
+    Signal pour lier automatiquement les ImportInvitation lors de l'inscription.
+    Mis à jour le statut des invitations d'import correspondantes.
+    """
+    from xamu.imports.models import ImportInvitation
+    
+    logger.info(f"Recherche d'ImportInvitation pour {user.email}")
+    
+    # Chercher toutes les ImportInvitation en attente pour cet email
+    import_invitations = ImportInvitation.objects.filter(
+        email=user.email,
+        statut__in=['pending', 'sent']
+    )
+    
+    if user.etablissement:
+        # Filtrer par établissement si l'utilisateur en a un
+        import_invitations = import_invitations.filter(
+            etablissement=user.etablissement
+        )
+    
+    for import_invitation in import_invitations:
+        try:
+            import_invitation.marquer_comme_acceptee(user)
+            logger.info(f"ImportInvitation {import_invitation.id} liée à l'utilisateur {user.email}")
+        except Exception as e:
+            logger.error(f"Erreur lors de la liaison ImportInvitation {import_invitation.id}: {e}")
